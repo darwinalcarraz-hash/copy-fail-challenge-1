@@ -89,3 +89,4 @@ Para arreglarlo, hice lo siguiente:
 Primero, corregí las rutas en los archivos .sh. Como mi carpeta se renombró a copy-fail-challenge-1, los scripts se perdían buscando la ruta original, así que usé sed para actualizar las direcciones en el script 01_build_kernel.sh.
 Luego, me di cuenta de que el contenedor no tenía instalado xz-utils, que es necesario para descomprimir el kernel. Lo solucioné con un simple apt-get install después de actualizar los repositorios.
 Finalmente, para que no se me caiga la compilación por falta de memoria, limpié los archivos temporales que se habían creado mal y configuré el proceso para que use un solo núcleo en lugar de dos. Con esto la máquina trabajó más lento pero estable, sin crasheos. Después de eso, ya pude arrancar la VM con QEMU sin problemas.
+![alt text](image.png)
