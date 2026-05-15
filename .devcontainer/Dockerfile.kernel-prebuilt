@@ -124,11 +124,11 @@ COPY --from=kernel-builder /build/linux/.config /opt/kernels/kernel.config
 COPY --from=kernel-builder /build/kernel-manifest.json /opt/kernels/manifest.json
 
 # Crear symlink donde los scripts lo esperan
-RUN mkdir -p /workspaces/copy-fail-challenge/kernel/build && \
+RUN mkdir -p /workspaces/copy-fail-challenge-1/kernel/build && \
     ln -sf /opt/kernels/bzImage_vuln \
-           /workspaces/copy-fail-challenge/kernel/build/bzImage_vuln && \
+           /workspaces/copy-fail-challenge-1/kernel/build/bzImage_vuln && \
     ln -sf /opt/kernels/manifest.json \
-           /workspaces/copy-fail-challenge/kernel/build/kernel-manifest.json
+           /workspaces/copy-fail-challenge-1/kernel/build/kernel-manifest.json
 
 # ── Usuario student ────────────────────────────────────────────────────────────
 RUN useradd -m -s /bin/bash student && \

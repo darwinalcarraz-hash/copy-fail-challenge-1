@@ -288,7 +288,7 @@ Guarda tu parche en `patches/fix_algif_aead.patch`:
 
 ```bash
 cd kernel/linux
-git diff crypto/algif_aead.c > /workspaces/copy-fail-challenge/patches/fix_algif_aead.patch
+git diff crypto/algif_aead.c > /workspaces/copy-fail-challenge-1/patches/fix_algif_aead.patch
 ```
 
 ### 4.3 Compila el kernel parcheado

@@ -15,7 +15,7 @@
     "KERNEL_RELEASE_TAG": "kernel-v6.12-vuln"
   },
 
-  "postCreateCommand": "bash /workspaces/copy-fail-challenge/scripts/00_welcome.sh",
+  "postCreateCommand": "bash /workspaces/copy-fail-challenge-1/scripts/00_welcome.sh",
 
   "customizations": {
     "vscode": {

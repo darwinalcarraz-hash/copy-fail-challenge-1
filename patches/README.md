@@ -31,7 +31,7 @@ git fetch upstream a664bf3d603d   # el commit del fix
 git cherry-pick a664bf3d603d
 
 git diff HEAD~1 HEAD crypto/algif_aead.c > \
-  /workspaces/copy-fail-challenge/patches/fix_algif_aead.patch
+  /workspaces/copy-fail-challenge-1/patches/fix_algif_aead.patch
 ```
 
 ### Opción B: Editar manualmente
@@ -47,7 +47,7 @@ vim crypto/algif_aead.c
 
 # Genera el parche
 git diff crypto/algif_aead.c > \
-  /workspaces/copy-fail-challenge/patches/fix_algif_aead.patch
+  /workspaces/copy-fail-challenge-1/patches/fix_algif_aead.patch
 ```
 
 ## Verificar que el parche es correcto
