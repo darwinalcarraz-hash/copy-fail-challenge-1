@@ -128,9 +128,7 @@ chmod +x "$INITRAMFS_DIR/init"
 
 echo -e "${CYAN}[6/6] Empaquetando initramfs...${NC}"
 cd "$INITRAMFS_DIR"
-cp /workspaces/copy-fail-challenge-1/exp_estatico ./home/student/exploit
-chmod 4755 ./home/student/exploit
-chown 1001:1001 ./home/student/exploit
+
 chmod 4755 ./bin/busybox
 find . | cpio -o -H newc | gzip > "$BUILD_DIR/initramfs.cpio.gz"
 

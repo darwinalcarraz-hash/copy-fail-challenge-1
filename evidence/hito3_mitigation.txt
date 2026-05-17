@@ -1,0 +1,12 @@
+=== HITO 3: MITIGACIÓN TEMPORAL ===
+Fecha: Sun May 17 15:12:27 UTC 2026
+Hostname: copy-fail-Darwin-Alcarraz
+algif_aead en lsmod:
+(módulo NO cargado - mitigación activa)
+
+Intento de exploit post-mitigación:
+Traceback (most recent call last):
+  File "/home/student/copy_fail_exp.py", line 8, in <module>
+    f=g.open("/usr/bin/su",0);i=0;e=zlib.decompress(d("78daab77f57163626464800126063b0610af82c101cc7760c0040e0c160c301d209a154d169)
+      ^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/usr/bin/s

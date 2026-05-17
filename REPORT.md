@@ -40,3 +40,15 @@ Por último, el exploit buscaba `/usr/bin/su` que no existía, y además BusyBox
 Después de resolver todos estos problemas, el exploit funcionó correctamente y obtuve una shell con privilegios de root:
 
 ![alt text](<Captura de pantalla 2026-05-16 202027.png>)   ![alt text](<Captura de pantalla 2026-05-16 202721.png>)
+
+## Hito 3: Mitigación Temporal
+
+La mitigación oficial para CVE-2026-31431 antes de poder parchear el kernel es deshabilitar el módulo `algif_aead`. 
+
+Primero confirmé que el módulo estaba cargado con `lsmod | grep algif_aead`, lo cual mostró que estaba activo. Luego lo descargué con `rmmod algif_aead` y verifiqué que ya no aparecía en `lsmod`. 
+
+Al intentar ejecutar el exploit nuevamente, falló con un error, confirmando que la mitigación fue efectiva.
+
+Para que la mitigación persista entre reinicios, se crea el archivo de configuración:
+
+![alt text](<Captura de pantalla 2026-05-17 101220.png>) ![alt text](<Captura de pantalla 2026-05-17 101342.png>)
