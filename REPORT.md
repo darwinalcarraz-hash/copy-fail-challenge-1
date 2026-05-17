@@ -52,3 +52,33 @@ Al intentar ejecutar el exploit nuevamente, falló con un error, confirmando que
 Para que la mitigación persista entre reinicios, se crea el archivo de configuración:
 
 ![alt text](<Captura de pantalla 2026-05-17 101220.png>) ![alt text](<Captura de pantalla 2026-05-17 101342.png>)
+
+## Hito 4: Parche Permanente
+
+Durante este hito tuve que aplicar el fix oficial al código fuente del kernel y recompilarlo desde cero.
+
+Primero estudié el archivo `crypto/algif_aead.c` para entender dónde estaba el bug. La función problemática es `_aead_recvmsg()`, y el error estaba en esta línea:
+
+![alt text](<Captura de pantalla 2026-05-17 115524.png>)
+
+Como se puede ver, el parámetro `rsgl_src` se usaba tanto como origen y como destino en la operación criptográfica. Esto es el problema porque cuando `src == dst`, el kernel puede terminar escribiendo en páginas del page cache que deberían ser de solo lectura, como las de `/usr/bin/su`.
+
+Para aplicar el fix cambié `rsgl_src` por `tsgl_src` en esa línea dentro del archivo `crypto/algif_aead.c`, separando así el origen del destino y evitando que se escriba en el page cache:
+
+![alt text](<Captura de pantalla 2026-05-17 105418.png>)
+
+Una vez aplicado el cambio, guardé el parche con el siguiente comando:
+
+```bash
+git diff crypto/algif_aead.c > patches/fix_algif_aead.patch
+```
+Esto generó el archivo `patches/fix_algif_aead.patch` con los cambios realizados. Luego recompilé el kernel ejecutando `make patch`:
+![alt text](<Captura de pantalla 2026-05-17 105809.png>) ![alt text](<Captura de pantalla 2026-05-17 114240.png>)
+
+Esto generó el archivo `patches/fix_algif_aead.patch` con los cambios realizados. Luego recompilé el kernel ejecutando `make patch`, que aplica el parche y genera un nuevo bzImage parcheado.
+
+Una vez que arrancó la VM con el kernel parcheado usando `make qemu-patched`, intenté ejecutar el exploit como usuario `student` y esta vez falló con error — ya no fue posible obtener root:
+
+![alt text](<Captura de pantalla 2026-05-17 114548.png>)  ![alt text](<Captura de pantalla 2026-05-17 114632.png>)
+
+Esto confirma que el parche neutraliza completamente el CVE-2026-31431.
