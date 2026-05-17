@@ -82,3 +82,28 @@ Una vez que arrancó la VM con el kernel parcheado usando `make qemu-patched`, i
 ![alt text](<Captura de pantalla 2026-05-17 114548.png>)  ![alt text](<Captura de pantalla 2026-05-17 114632.png>)
 
 Esto confirma que el parche neutraliza completamente el CVE-2026-31431.
+
+## Bonus — Reporte técnico
+
+### 1. ¿Cuál es el bug raíz y en qué archivo/función está?
+
+El bug está en el archivo `crypto/algif_aead.c`, específicamente en la función `_aead_recvmsg()`. El problema fue introducido en 2017 como una optimización que encadenaba las páginas del TX SGL al final del RX SGL usando `sg_chain()`, y luego hacía que `req->src` y `req->dst` apuntaran al mismo scatterlist. Esto significa que la operación criptográfica leía y escribía en el mismo lugar en memoria.
+
+### 2. ¿Por qué el write a dst[assoclen + cryptlen] es peligroso?
+
+Cuando `src == dst`, el kernel escribe el resultado de la operación AEAD directamente sobre las páginas de origen. El problema es que esas páginas pueden pertenecer al page cache de un archivo en disco como `/usr/bin/su`. Normalmente el page cache es de solo lectura para usuarios sin privilegios, pero gracias a este bug el kernel mismo hace la escritura sin verificar que esas páginas deberían estar protegidas. Así un usuario sin privilegios logra modificar la memoria de un binario del sistema sin necesitar permisos de escritura sobre el archivo.
+
+### 3. ¿Por qué el exploit es "stealthy"?
+
+El exploit nunca toca el archivo en disco. Todo ocurre en el page cache, que es la copia en RAM que el kernel mantiene de los archivos para acceso rápido. Si alguien verifica el hash SHA256 de `/usr/bin/su` en disco, el resultado será correcto porque el archivo en disco no cambió. La corrupción solo existe en memoria mientras el sistema está encendido. Esto hace que herramientas de integridad como `aide` o `tripwire` no detecten nada, y que al reiniciar el sistema todo vuelva a la normalidad.
+
+### 4. Conexión con conceptos de clase
+
+- **Page cache**: el kernel mantiene en RAM copias de los archivos del disco para acceso rápido. El exploit aprovecha que puede escribir en esa copia en RAM sin pasar por el sistema de archivos ni sus controles de permisos.
+- **setuid**: el bit setuid en `/usr/bin/su` hace que al ejecutarlo, el proceso corra con los privilegios del dueño del archivo (root), sin importar quién lo ejecute. El exploit corrompe ese binario en memoria para que al ejecutarse nos dé una shell root.
+- **Inodos**: el inodo del archivo en disco contiene los metadatos y permisos. El exploit bypasea completamente el inodo porque no escribe al archivo sino directo a las páginas del page cache asociadas a ese inodo.
+- **chmod**: el bit setuid se configura con `chmod 4755`. Sin ese bit, corromper el binario no serviría de nada porque el proceso no correría como root al ejecutarse.
+
+### 5. ¿Qué aprendiste sobre cómo múltiples cambios "razonables" pueden crear un bug grave?
+
+Lo más importante que aprendí es que la seguridad no puede evaluarse componente por componente. En 2017 se hicieron dos cambios que individualmente parecían razonables: usar `sg_chain()` para encadenar scatterlists era una optimización válida, y permitir que el page cache participara en operaciones criptográficas también tenía sentido en ciertos contextos. Pero la combinación de ambos creó una vulnerabilidad grave que pasó desapercibida por casi 10 años. Esto me enseña que en seguridad hay que pensar en las interacciones entre subsistemas y no solo en cada componente por separado.
