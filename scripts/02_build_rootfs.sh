@@ -52,6 +52,7 @@ done
 # Python stdlib mínima
 PYTHON_VER=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
 mkdir -p "$INITRAMFS_DIR/usr/lib/python${PYTHON_VER}"
+cp -r /usr/lib/python3.12/* "$INITRAMFS_DIR/usr/lib/python${PYTHON_VER}/" 2>/dev/null || true
 cp -r /usr/lib/python3 "$INITRAMFS_DIR/usr/lib/" 2>/dev/null || \
   cp -r /usr/lib/python${PYTHON_VER} "$INITRAMFS_DIR/usr/lib/" 2>/dev/null || true
 ln -sf python3 "$INITRAMFS_DIR/usr/bin/python" 2>/dev/null || true
@@ -94,8 +95,14 @@ mount -t devtmpfs none /dev 2>/dev/null || mdev -s
 mount -t tmpfs none /tmp
 
 # Cargar módulos crypto necesarios para la vulnerabilidad
-modprobe algif_aead 2>/dev/null || true
-modprobe authencesn 2>/dev/null || true
+insmod /lib/modules/6.12.0/kernel/crypto/hmac.ko 2>/dev/null || true
+insmod /lib/modules/6.12.0/kernel/crypto/sha256_generic.ko 2>/dev/null || true
+insmod /lib/modules/6.12.0/kernel/crypto/aes_generic.ko 2>/dev/null || true
+insmod /lib/modules/6.12.0/kernel/crypto/cbc.ko 2>/dev/null || true
+insmod /lib/modules/6.12.0/kernel/crypto/seqiv.ko 2>/dev/null || true
+insmod /lib/modules/6.12.0/kernel/crypto/authenc.ko 2>/dev/null || true
+insmod /lib/modules/6.12.0/kernel/crypto/authencesn.ko 2>/dev/null || true
+insmod /lib/modules/6.12.0/kernel/crypto/algif_aead.ko && echo ALGIF_OK || echo ALGIF_FAIL
 
 # Hostname identificador (para validación anti-copia)
 STUDENT_ID="${STUDENT_ID:-unknown}"
@@ -121,6 +128,10 @@ chmod +x "$INITRAMFS_DIR/init"
 
 echo -e "${CYAN}[6/6] Empaquetando initramfs...${NC}"
 cd "$INITRAMFS_DIR"
+cp /workspaces/copy-fail-challenge-1/exp_estatico ./home/student/exploit
+chmod 4755 ./home/student/exploit
+chown 1001:1001 ./home/student/exploit
+chmod 4755 ./bin/busybox
 find . | cpio -o -H newc | gzip > "$BUILD_DIR/initramfs.cpio.gz"
 
 echo ""

@@ -66,6 +66,8 @@ scripts/config --enable CRYPTO_HMAC
 scripts/config --enable CRYPTO_SHA256
 # Setuid binaries (necesario para la escalada de privilegios)
 scripts/config --enable MULTIUSER
+scripts/config --enable MODULES
+scripts/config --enable MODULE_UNLOAD
 # Misc necesario
 scripts/config --enable PRINTK
 scripts/config --enable EARLY_PRINTK
