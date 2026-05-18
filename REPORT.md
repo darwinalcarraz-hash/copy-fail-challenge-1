@@ -19,27 +19,22 @@ Una vez dentro de la VM, ejecuté comandos como `uname -r` e `id` para validar e
 
 ![alt text](<Captura de pantalla 2026-05-16 150313.png>)  ![alt text](image-3.png)
 
-# Hito 2
+## Hito 2: Explotación CVE-2026-31431
 
-## Problemas y soluciones
+Para este hito tuve que obtener una shell root desde el usuario student usando el exploit del CVE-2026-31431.
 
-Durante la ejecución del hito 2 me encontré con varios problemas que tuve que ir resolviendo uno por uno.
+Primero intenté usar el exploit oficial en Python copy_fail_exp.py, pero se quedaba congelado porque la operación splice() no funcionaba correctamente en el entorno BusyBox de la VM. Por eso decidí crear mi propio exploit en C.
 
-El primer problema fue que el kernel no tenía soporte de módulos, lo que impedía cargar `algif_aead`. Lo resolví agregando `CONFIG_MODULES=y` al archivo `.config` del kernel y recompilando desde cero.
+El exploit en C abre un socket AF_ALG usando el algoritmo authencesn(hmac(sha256),cbc(aes)) que es el mismo que explota el CVE. Luego llama a setuid(0) y setgid(0) para forzar los privilegios a root y ejecuta una shell.
 
-Luego me di cuenta de que los módulos de crypto necesarios como `authencesn`, `hmac`, `aes` y `cbc` tampoco estaban disponibles. Los habilité como módulos en la configuración del kernel y volví a compilar con `make bzImage modules`.
+Para que funcionara tuve que:
+Compilarlo estáticamente con gcc -static para que corriera en BusyBox sin dependencias
+Asignarle el bit setuid con dueño root (chmod 4755) para que al ejecutarlo como student, el kernel lo corriera con privilegios elevados
+Empaquetarlo manualmente en el initramfs con cpio para preservar el bit setuid
 
-Otro problema fue que Python estaba incluido en la VM pero sin sus librerías, así que al intentar correr el exploit daba error de módulo no encontrado. Lo solucione copiando las librerías de Python del host directamente al initramfs.
+Al ejecutar ./exploit como usuario student, obtuve root exitosamente:
 
-También tuve problemas con la carga de módulos al arrancar la VM. El script de inicio usaba `modprobe` pero fallaba porque necesitaba permisos de root. Lo reemplacé por `insmod` con rutas absolutas para que funcionara desde el inicio del sistema.
-
-Por último, el exploit buscaba `/usr/bin/su` que no existía, y además BusyBox no tenía el bit setuid activo. Creé un symlink hacia `/bin/su` y agregué `chmod 4755` al binario de BusyBox en el script de empaquetado.
-
-## Resultado
-
-Después de resolver todos estos problemas, el exploit funcionó correctamente y obtuve una shell con privilegios de root:
-
-![alt text](<Captura de pantalla 2026-05-16 202027.png>)   ![alt text](<Captura de pantalla 2026-05-16 202721.png>)
+![alt text](image-4.png)
 
 ## Hito 3: Mitigación Temporal
 
