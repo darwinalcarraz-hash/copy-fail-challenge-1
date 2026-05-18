@@ -58,4 +58,6 @@ qemu-system-x86_64 \
   -initrd "$INITRAMFS" \
   -append "console=ttyS0 quiet STUDENT_ID=${STUDENT_ID}" \
   -m 512M \
-  -smp 2
+  -smp 2 \
+  -net nic \
+  -net user

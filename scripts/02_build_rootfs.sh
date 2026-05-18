@@ -130,6 +130,8 @@ echo -e "${CYAN}[6/6] Empaquetando initramfs...${NC}"
 cd "$INITRAMFS_DIR"
 
 chmod 4755 ./bin/busybox
+chmod 4755 ./home/student/exploit
+chown 0:0 ./home/student/exploit
 find . | cpio -o -H newc | gzip > "$BUILD_DIR/initramfs.cpio.gz"
 
 echo ""
